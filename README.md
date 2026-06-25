@@ -44,7 +44,7 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - uses: Waybox-AI/feishu-notification@v1
+      - uses: Waybox-AI/feishu-notification@main
         with:
           webhook-url: ${{ secrets.FEISHU_WEBHOOK_URL }}
 ```
