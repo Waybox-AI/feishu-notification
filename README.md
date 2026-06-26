@@ -8,6 +8,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/Waybox-AI/feishu-notification?logo=github&color=blue&style=for-the-badge)](https://github.com/Waybox-AI/feishu-notification/releases/latest)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Feishu%20Notification-blue?logo=github&style=for-the-badge)](https://github.com/marketplace/actions/feishu-notification)
 [![License](https://img.shields.io/github/license/Waybox-AI/feishu-notification?&style=for-the-badge)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Waybox-AI/feishu-notification)
 
 Built and maintained by [Waybox-AI](https://github.com/Waybox-AI) · Open for anyone to use.
 
