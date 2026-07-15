@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feishu Card Sender</title>
+    <style>
+        :root {
+            --primary: #3370ff;
+            --primary-hover: #1e56d4;
+            --bg: #f5f6f7;
+            --card-bg: #ffffff;
+            --text: #1f2329;
+            --text-muted: #646a73;
+            --border: #dee0e3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(31, 35, 41, 0.08);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 24px;
+            color: var(--text);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #status {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success { background: #e1f3d8; color: #529b2e; border: 1px solid #c2e7b0; }
+        .error { background: #fde2e2; color: #c45656; border: 1px solid #fcd3d3; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 Feishu Card Broadcast</h2>
+    <p class="subtitle">Customize your message details and dispatch an interactive card to your chat.</p>
+
+    <!-- Webhook Input -->
+    <div class="form-group">
+        <label for="webhook">Feishu Bot Webhook URL</label>
+        <input type="text" id="webhook" placeholder="https://feishu.cn...">
+    </div>
+
+    <!-- Title Input -->
+    <div class="form-group">
+        <label for="title">Card Title</label>
+        <input type="text" id="title" value="🚀 Project Update Required">
+    </div>
+
+    <!-- Content Input -->
+    <div class="form-group">
+        <label for="content">Card Content (Supports Markdown)</label>
+        <textarea id="content">Hi <at id="all"></at>, please review the pending tasks for this sprint. We are approaching our deadline.
+
+**Key Metrics:**
+* Total Tasks: 20
+* Completed: 12
+* Remaining: 8</textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <button onclick="sendFeishuCard()">Send Message Card</button>
+
+    <!-- Response Status -->
+    <div id="status"></div>
+</div>
+
+<script>
+    async function sendFeishuCard() {
+        const webhookUrl = document.getElementById('webhook').value.trim();
+        const title = document.getElementById('title').value.trim();
+        const content = document.getElementById('content').value.trim();
+
+        if (!webhookUrl) {
+            showStatus('Please enter your Feishu Webhook URL.', 'error');
+            return;
+        }
+
+        if (!content) {
+            showStatus('Please enter some content for your card.', 'error');
+            return;
+        }
+
+        // Format the precise JSON Payload structure
+        const payload = {
+            "msg_type": "interactive",
+            "card": {
+                "config": { "wide_screen_mode": true },
+                "header": {
+                    "title": { "tag": "plain_text", "content": title },
+                    "template": "blue"
+                },
+                "elements": [
+                    {
+                        "tag": "div",
+                        "text": {
+                            "tag": "lark_md",
+                            "content": content
+                        }
+                    },
+                    { "tag": "hr" },
+                    {
+                        "tag": "action",
+                        "actions": [
+                            {
+                                "tag": "button",
+                                "text": { "tag": "plain_text", "content": "View Dashboard" },
+                                "type": "primary"
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        showStatus('Sending...', '');
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.code === 0) {
+                showStatus('✅ Message card sent successfully!', 'success');
+            } else {
+                showStatus(`❌ Failed: ${result.msg || 'Check bot setup or code error'} (Code: ${result.code})`, 'error');
+            }
+        } catch (error) {
+            showStatus(`💥 Error: Webhook blocked by CORS. Run this page on a local web server (e.g., Live Server) or use a CORS proxy extension.`, 'error');
+        }
+    }
+
+    function showStatus(text, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = text;
+        statusDiv.className = type;
+        statusDiv.style.display = text ? 'block' : 'none';
+    }
+</script>
+
+</body>
+</html>
+
