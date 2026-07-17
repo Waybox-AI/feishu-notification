@@ -53,12 +53,20 @@ runs:
           TEMPLATE="orange"
           SHORT_SHA="${COMMIT_SHA:0:7}"
           DETAIL="新提交:\`${SHORT_SHA}\`"
-        elif [ "$PR_ACTION" = "closed" ] && [ "$PR_MERGED" = "true" ] && [ "$PR_BASE" = "main" ]; then
+        elif [ "$PR_ACTION" = "closed" ]; then
+          if [ "$PR_MERGED" != "true" ]; then
+            echo "PR closed without merging — skipping"
+            exit 0
+          fi
+          if [ "$PR_BASE" != "main" ]; then
+            echo "PR merged into '${PR_BASE}', not main — skipping"
+            exit 0
+          fi
           HEADER="✅ PR 已合并到 main"
           TEMPLATE="green"
           DETAIL="已由 **${PR_AUTHOR}** 合并。"
         else
-          echo "PR closed without merge or not targeting main — skipping"
+          echo "Unhandled PR action '${PR_ACTION}' — skipping"
           exit 0
         fi
 
