@@ -87,9 +87,20 @@ action = "opened"    AND draft = false                         → blue card  "�
 action = "opened"    AND draft = true                          → exit 0 (no notification)
 action = "synchronize" AND draft = false                       → orange card "PR 有新提交"
 action = "synchronize" AND draft = true                        → exit 0 (no notification)
-action = "closed" AND merged = true AND base = main            → green card  "PR 已合并到 main"
-anything else                                                  → exit 0 (no notification)
+action = "closed" AND merged != true                           → exit 0 (no notification, "closed without merging")
+action = "closed" AND merged = true AND base != main            → exit 0 (no notification, "merged into <base>, not main")
+action = "closed" AND merged = true AND base = main             → green card  "PR 已合并到 main"
+anything else (e.g. reopened, ready_for_review, edited)        → exit 0 (no notification, "unhandled PR action")
 ```
+
+Each skip case now logs a distinct reason. Earlier versions collapsed all three "closed" sub-cases and every
+unhandled action into one ambiguous "PR closed without merge or not targeting main" message, which made it hard to
+tell a genuine merge-guard skip from an unrelated action (like `reopened`) falling through the same `else`.
+
+**Caller trigger gotcha:** `github.event.action` only carries values the caller's workflow actually subscribes to via
+`on.pull_request.types`. If a caller's `types:` list omits `closed` (a common mistake when customizing the Quick
+Start example), the merge notification will never fire — not because of anything in this action's logic, but because
+the "closed" event never reaches it. See the Quick Start example in `README.md`, which always includes `closed`.
 
 Draft PRs are silently skipped on both `opened` and `synchronize`. Developers push
 work-in-progress commits to a Draft PR freely; only when the PR is marked "Ready for Review" (making
